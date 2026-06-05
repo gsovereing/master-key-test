@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Мастер-ключ — мини-тест</title>
+</head>
+<body>
+<!-- master-key test: self-contained, works offline, no registration, no internet needed -->
+<div id="root"></div>
+
+<style>
+  :root{
+    --paper:#f4ece0; --paper2:#efe5d6; --ink:#2b2117; --muted:#7a6a55;
+    --accent:#c4622d; --accent-soft:#e8b48a; --line:#d8c9b3; --ok:#3e7d54;
+    --card:#fbf6ee; --shadow:0 18px 40px -22px rgba(60,40,20,.45);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  #root{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    color:var(--ink); background:
+      radial-gradient(120% 80% at 100% 0%, #f7efe2 0%, transparent 55%),
+      radial-gradient(90% 70% at 0% 100%, #f1e6d4 0%, transparent 50%),
+      var(--paper);
+    min-height:100vh; padding:28px 18px 60px; line-height:1.55;
+  }
+  .wrap{max-width:680px;margin:0 auto}
+  .brand{font:600 14px/1 -apple-system,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
+  h1{font-family:Georgia,"Times New Roman",serif;font-weight:700;font-size:30px;margin:0 0 8px;letter-spacing:-.01em}
+  .lead{color:var(--muted);margin:0 0 22px;font-size:15.5px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px 22px 24px;box-shadow:var(--shadow);margin-bottom:18px}
+  .q{font-weight:600;font-size:16px;margin:0 0 12px}
+  .qnum{color:var(--accent);font-family:Georgia,serif;font-style:italic;margin-right:6px}
+  pre{background:#2b2117;color:#f4ece0;border-radius:12px;padding:14px 16px;overflow:auto;font:13.5px/1.5 ui-monospace,"SF Mono",Menlo,Consolas,monospace;margin:0 0 14px}
+  .opts{display:flex;flex-direction:column;gap:9px}
+  .opt{display:flex;align-items:center;gap:11px;border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:12px 14px;cursor:pointer;transition:.15s;font-size:15px}
+  .opt:hover{border-color:var(--accent-soft);transform:translateY(-1px)}
+  .opt.sel{border-color:var(--accent);background:#fbeee3}
+  .opt .dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--line);flex:0 0 auto}
+  .opt.sel .dot{border-color:var(--accent);background:var(--accent);box-shadow:inset 0 0 0 3px #fff}
+  .scale{display:flex;gap:6px;flex-wrap:wrap}
+  .scale button{width:42px;height:42px;border-radius:11px;border:1.5px solid var(--line);background:#fff;font-weight:600;cursor:pointer;font-size:15px;transition:.12s}
+  .scale button:hover{border-color:var(--accent-soft)}
+  .scale button.sel{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .scalelabels{display:flex;justify-content:space-between;color:var(--muted);font-size:12.5px;margin-top:7px}
+  label.field{display:block;font-weight:600;margin:0 0 8px;font-size:15px}
+  input[type=text]{width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;font-size:15px;background:#fff}
+  .seg{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+  .seg button{flex:1;min-width:130px;padding:13px 12px;border:1.5px solid var(--line);background:#fff;border-radius:12px;cursor:pointer;font-size:14.5px;font-weight:600;transition:.12s}
+  .seg button.sel{border-color:var(--accent);background:#fbeee3}
+  .seg button small{display:block;font-weight:400;color:var(--muted);font-size:12px;margin-top:3px}
+  .consent{display:flex;gap:11px;align-items:flex-start;font-size:14.5px;color:var(--muted)}
+  .consent input{margin-top:3px;width:18px;height:18px;flex:0 0 auto}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--accent);color:#fff;border:none;border-radius:13px;padding:15px 22px;font-size:16px;font-weight:600;cursor:pointer;width:100%;transition:.15s;box-shadow:0 10px 24px -12px var(--accent)}
+  .btn:hover{filter:brightness(1.04);transform:translateY(-1px)}
+  .btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+  .btn.ghost{background:#fff;color:var(--ink);border:1.5px solid var(--line);box-shadow:none}
+  .row{display:flex;gap:10px;flex-wrap:wrap}
+  .row .btn{flex:1;min-width:160px}
+  .warn{color:var(--accent);font-size:13.5px;margin-top:10px;min-height:18px}
+  .resultbig{font-family:Georgia,serif;font-size:44px;font-weight:700;margin:4px 0}
+  .pill{display:inline-block;background:#fbeee3;color:var(--accent);border-radius:999px;padding:5px 13px;font-size:13px;font-weight:600;margin-bottom:12px}
+  .kv{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px dashed var(--line);font-size:15px}
+  .kv:last-child{border:none}
+  .kv b{font-weight:600}
+  textarea{width:100%;min-height:90px;border:1.5px solid var(--line);border-radius:12px;padding:12px;font:13px/1.5 ui-monospace,monospace;background:#fff;resize:vertical}
+  .hint{color:var(--muted);font-size:13.5px;margin:8px 0 0}
+  .footer{text-align:center;color:var(--muted);font-size:12.5px;margin-top:26px}
+  .step{display:none}
+  .step.active{display:block;animation:fade .4s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+</style>
+
+<script>
+/* ============ НАСТРОЙКА ДЛЯ ИССЛЕДОВАТЕЛЯ ============
+   Впиши свой email между кавычками ДО того, как пересылать файл.
+   Тогда кнопка «Отправить на почту» сама подставит адрес.
+   Можно оставить пустым — участник впишет адрес сам.            */
+const RESEARCHER_EMAIL = "";
+/* ==================================================== */
+
+const SCALES = [
+  {id:"conf", q:"Насколько уверенно ты можешь сам написать простую программу?", lo:"совсем не могу", hi:"легко могу"},
+  {id:"anx",  q:"Насколько тебя пугает или напрягает программирование?",        lo:"совсем не пугает", hi:"очень пугает"},
+  {id:"int",  q:"Насколько тебе хочется заниматься программированием дальше?",   lo:"совсем не хочется", hi:"очень хочется"}
+];
+
+const TESTS = {
+  A:[
+    {code:'name = "Аня"\nprint("Привет, " + name)', q:"Что выведет программа?",
+     opts:["Привет, Аня","Привет, name","name","Ошибка"], correct:0},
+    {code:'x = 5\nx = x + 3', q:"Чему теперь равно x?",
+     opts:["5","8","3","53"], correct:1},
+    {code:'1)  name = "Аня"\n2)  print("Привет, " + name)', q:"Какую строку изменить, чтобы поздороваться с другим именем?",
+     opts:["Строку 1","Строку 2","Обе нельзя менять","Никакую"], correct:0},
+    {code:'for i in range(3):\n    print(i)', q:"Что выведет этот цикл?",
+     opts:["0 1 2","1 2 3","3","0 1 2 3"], correct:0},
+    {code:'a = 4\nb = 6\nprint(a + b)', q:"Что выведет программа?",
+     opts:["46","10","a + b","Ошибка"], correct:1}
+  ],
+  B:[
+    {code:'city = "Астана"\nprint("Город: " + city)', q:"Что выведет программа?",
+     opts:["Город: Астана","Город: city","city","Ошибка"], correct:0},
+    {code:'y = 10\ny = y - 4', q:"Чему теперь равно y?",
+     opts:["10","6","4","104"], correct:1},
+    {code:'1)  city = "Астана"\n2)  print("Город: " + city)', q:"Какую строку изменить, чтобы показать другой город?",
+     opts:["Строку 1","Строку 2","Обе нельзя менять","Никакую"], correct:0},
+    {code:'for i in range(2):\n    print("привет")', q:"Сколько раз выведется слово «привет»?",
+     opts:["2 раза","1 раз","0 раз","3 раза"], correct:0},
+    {code:'a = 7\nb = 2\nprint(a - b)', q:"Что выведет программа?",
+     opts:["72","5","a - b","Ошибка"], correct:1}
+  ]
+};
+
+const APPLIED = {q:"Если дать тебе готовую рабочую программу и попросить поменять в ней имя или город — как думаешь, справишься?",
+  opts:["Точно справлюсь","Наверное справлюсь","Вряд ли справлюсь","Точно нет"]};
+
+// ---------- utf-8 safe base64 ----------
+function enc(o){return btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/=+$/,'')}
+function dec(s){try{return JSON.parse(decodeURIComponent(escape(atob(s))))}catch(e){return null}}
+
+const state = {pid:"", ver:"A", consent:false, scales:{}, answers:{}, applied:null};
+const root = document.getElementById('root');
+
+// ---------- router: result view vs test ----------
+const hash = location.hash.match(/[#&]r=([^&]+)/);
+if(hash){ const data = dec(hash[1]); if(data){ renderResultView(data); } else { renderTest(); } }
+else { renderTest(); }
+
+// ===================== TEST FLOW =====================
+function renderTest(){
+  root.innerHTML = `
+  <div class="wrap">
+    <div class="brand">Мастер-ключ · мини-тест</div>
+    <h1>Пара минут — и всё</h1>
+    <p class="lead">Здесь нет «правильных» оценок тебя. Это просто короткий снимок: что ты чувствуешь и как читаешь маленькие кусочки кода. Отвечай как есть — даже «не знаю» это нормальный ответ.</p>
+
+    <!-- STEP 0: intro -->
+    <div class="step active" id="s0">
+      <div class="card">
+        <label class="field">Как тебя записать? (имя или любой ник — нужно только чтобы сопоставить «до» и «после»)</label>
+        <input type="text" id="pid" placeholder="например: Игрок-7 или Дана" />
+        <div style="height:18px"></div>
+        <label class="field">Это твой первый раз или повторное прохождение?</label>
+        <div class="seg" id="ver">
+          <button data-v="A" class="sel">Первый раз<small>Тест A</small></button>
+          <button data-v="B">Повторно, спустя несколько дней<small>Тест B</small></button>
+        </div>
+        <div style="height:18px"></div>
+        <label class="consent"><input type="checkbox" id="consent"/>
+          <span>Я согласен(на) участвовать. Понимаю, что мои анонимные ответы могут войти в отчёт по образовательному проекту. Участие добровольное.</span></label>
+      </div>
+      <button class="btn" id="go0" disabled>Начать →</button>
+      <div class="warn" id="w0"></div>
+    </div>
+
+    <!-- STEP 1: scales -->
+    <div class="step" id="s1">
+      <div class="card" id="scalesCard"></div>
+      <div class="row"><button class="btn ghost" data-back="0">← Назад</button><button class="btn" id="go1">Дальше →</button></div>
+      <div class="warn" id="w1"></div>
+    </div>
+
+    <!-- STEP 2: quiz -->
+    <div class="step" id="s2">
+      <div id="quizCard"></div>
+      <div class="row"><button class="btn ghost" data-back="1">← Назад</button><button class="btn" id="go2">Готово, показать результат →</button></div>
+      <div class="warn" id="w2"></div>
+    </div>
+
+    <!-- STEP 3: result -->
+    <div class="step" id="s3"><div id="resultCard"></div></div>
+
+    <div class="footer">Файл работает без интернета. Твои ответы никуда не уходят сами — в конце ты сам(а) решаешь, как их вернуть.</div>
+  </div>`;
+
+  // intro logic
+  const pid=root.querySelector('#pid'), consent=root.querySelector('#consent'), go0=root.querySelector('#go0');
+  function chk0(){ go0.disabled = !(pid.value.trim() && consent.checked); }
+  pid.oninput=()=>{state.pid=pid.value.trim();chk0()};
+  consent.onchange=()=>{state.consent=consent.checked;chk0()};
+  root.querySelectorAll('#ver button').forEach(b=>b.onclick=()=>{
+    root.querySelectorAll('#ver button').forEach(x=>x.classList.remove('sel'));
+    b.classList.add('sel'); state.ver=b.dataset.v;
+  });
+  go0.onclick=()=>{ buildScales(); show(1); };
+  root.querySelectorAll('[data-back]').forEach(b=>b.onclick=()=>show(+b.dataset.back));
+}
+
+function buildScales(){
+  const c=root.querySelector('#scalesCard');
+  c.innerHTML = `<p class="q">Сначала про ощущения — выбери цифру от 1 до 10.</p>` + SCALES.map(s=>`
+    <div style="margin:18px 0 6px"><div class="q" style="font-weight:600;font-size:15.5px">${s.q}</div>
+      <div class="scale" data-sid="${s.id}">${[...Array(10)].map((_,i)=>`<button data-v="${i+1}">${i+1}</button>`).join('')}</div>
+      <div class="scalelabels"><span>1 — ${s.lo}</span><span>${s.hi} — 10</span></div>
+    </div>`).join('');
+  c.querySelectorAll('.scale').forEach(sc=>sc.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+    sc.querySelectorAll('button').forEach(x=>x.classList.remove('sel'));
+    b.classList.add('sel'); state.scales[sc.dataset.sid]=+b.dataset.v;
+  }));
+  root.querySelector('#go1').onclick=()=>{
+    if(Object.keys(state.scales).length<3){root.querySelector('#w1').textContent='Ответь, пожалуйста, на все три — это пара секунд.';return;}
+    root.querySelector('#w1').textContent=''; buildQuiz(); show(2);
+  };
+}
+
+function buildQuiz(){
+  const qs=TESTS[state.ver];
+  const c=root.querySelector('#quizCard');
+  c.innerHTML = `<div class="card"><p class="q" style="margin-bottom:4px">Теперь маленькие кусочки кода (${state.ver==='A'?'Тест A':'Тест B'}).</p>
+    <p class="hint" style="margin:0 0 4px">Если не знаешь — выбирай как кажется. Это не экзамен.</p></div>`
+    + qs.map((it,qi)=>`<div class="card">
+        <div class="q"><span class="qnum">${qi+1}.</span>${it.q}</div>
+        <pre>${it.code.replace(/</g,'&lt;')}</pre>
+        <div class="opts" data-qi="${qi}">${it.opts.map((o,oi)=>`<div class="opt" data-oi="${oi}"><span class="dot"></span><span>${o}</span></div>`).join('')}</div>
+      </div>`).join('')
+    + `<div class="card"><div class="q">${APPLIED.q}</div>
+        <div class="opts" data-applied="1">${APPLIED.opts.map((o,oi)=>`<div class="opt" data-oi="${oi}"><span class="dot"></span><span>${o}</span></div>`).join('')}</div></div>`;
+  c.querySelectorAll('.opts').forEach(grp=>grp.querySelectorAll('.opt').forEach(op=>op.onclick=()=>{
+    grp.querySelectorAll('.opt').forEach(x=>x.classList.remove('sel')); op.classList.add('sel');
+    if(grp.dataset.applied) state.applied=+op.dataset.oi;
+    else state.answers[grp.dataset.qi]=+op.dataset.oi;
+  }));
+  root.querySelector('#go2').onclick=()=>{
+    const qs=TESTS[state.ver];
+    if(Object.keys(state.answers).length<qs.length || state.applied===null){
+      root.querySelector('#w2').textContent='Остались неотвеченные вопросы — отметь хоть какой-то вариант в каждом.';return;}
+    root.querySelector('#w2').textContent=''; showResult();
+  };
+}
+
+function score(){ const qs=TESTS[state.ver]; let s=0; qs.forEach((it,i)=>{if(state.answers[i]===it.correct)s++}); return s; }
+
+function payload(){
+  return {p:state.pid, v:state.ver, d:new Date().toISOString().slice(0,10),
+    c:state.scales.conf, x:state.scales.anx, i:state.scales.int,
+    s:score(), n:TESTS[state.ver].length, a:state.applied};
+}
+
+function readable(d){
+  const ap=["Точно справлюсь","Наверное справлюсь","Вряд ли","Точно нет"][d.a] ?? "—";
+  return `РЕЗУЛЬТАТ «МАСТЕР-КЛЮЧ»
+Участник: ${d.p}
+Версия: Тест ${d.v}   Дата: ${d.d}
+Уверенность: ${d.c}/10
+Тревога: ${d.x}/10
+Интерес: ${d.i}/10
+Код-тест: ${d.s} из ${d.n}
+Уверен в действии: ${ap}`;
+}
+
+function tableRow(d){ return `${d.p}\t${d.v}\t${d.d}\t${d.c}\t${d.x}\t${d.i}\t${d.s}/${d.n}\t${d.a+1}`; }
+
+function showResult(){
+  const d=payload(); const isLocal=location.protocol==='file:'||location.origin==='null';
+  const link=location.origin+location.pathname+'#r='+enc(d);
+  const mailBody=encodeURIComponent(readable(d));
+  const mailto=`mailto:${RESEARCHER_EMAIL}?subject=${encodeURIComponent('Результат Мастер-ключ — '+d.p)}&body=${mailBody}`;
+  const c=root.querySelector('#resultCard');
+  c.innerHTML=`
+    <div class="card" style="text-align:center">
+      <div class="pill">Готово · Тест ${d.v}</div>
+      <div class="resultbig">${d.s}<span style="font-size:24px;color:var(--muted)">/${d.n}</span></div>
+      <p class="lead" style="margin:0 auto;max-width:420px">Спасибо! Это снимок «на сейчас». Что бы ни вышло — это нормальная отправная точка. Осталось вернуть результат тому, кто тебя позвал.</p>
+    </div>
+    <div class="card">
+      <div class="kv"><span>Уверенность</span><b>${d.c}/10</b></div>
+      <div class="kv"><span>Тревога</span><b>${d.x}/10</b></div>
+      <div class="kv"><span>Интерес</span><b>${d.i}/10</b></div>
+      <div class="kv"><span>Код-тест</span><b>${d.s} из ${d.n}</b></div>
+    </div>
+    <div class="card">
+      <p class="q" style="margin-bottom:6px">Как вернуть результат — выбери удобное:</p>
+      <div class="row">
+        <button class="btn" id="copyText">📋 Скопировать текст</button>
+        <button class="btn ghost" id="mail">✉️ Отправить на почту</button>
+      </div>
+      <div style="height:10px"></div>
+      <button class="btn ghost" id="copyLink">🔗 Скопировать ссылку${isLocal?' (только на этом устройстве)':''}</button>
+      <p class="hint">${isLocal?'Проще всего: нажми «Скопировать текст» и перешли его тому, кто дал тебе этот тест.':'Скопированную ссылку или текст перешли тому, кто дал тебе этот тест.'}</p>
+      <textarea id="out" readonly>${readable(d)}</textarea>
+    </div>`;
+  show(3);
+  const out=root.querySelector('#out');
+  const flash=(btn,t)=>{const o=btn.textContent;btn.textContent=t;setTimeout(()=>btn.textContent=o,1500)};
+  const copy=async(txt,btn)=>{try{await navigator.clipboard.writeText(txt);flash(btn,'✓ Скопировано')}catch(e){out.value=txt;out.select();document.execCommand('copy');flash(btn,'✓ Скопировано')}};
+  root.querySelector('#copyLink').onclick=e=>{out.value=link;copy(link,e.currentTarget)};
+  root.querySelector('#copyText').onclick=e=>{out.value=readable(d);copy(readable(d),e.currentTarget)};
+  root.querySelector('#mail').onclick=()=>{location.href=mailto};
+}
+
+// ===================== RESULT VIEW (for the researcher) =====================
+function renderResultView(d){
+  const ap=["Точно справлюсь","Наверное справлюсь","Вряд ли","Точно нет"][d.a] ?? "—";
+  root.innerHTML=`<div class="wrap">
+    <div class="brand">Мастер-ключ · полученный результат</div>
+    <h1>Результат участника</h1>
+    <p class="lead">Это расшифровка присланной ссылки. Скопируй строку для таблицы — она вставится в Google Sheets/Excel по столбцам.</p>
+    <div class="card">
+      <div class="kv"><span>Участник</span><b>${d.p}</b></div>
+      <div class="kv"><span>Версия / дата</span><b>Тест ${d.v} · ${d.d}</b></div>
+      <div class="kv"><span>Уверенность</span><b>${d.c}/10</b></div>
+      <div class="kv"><span>Тревога</span><b>${d.x}/10</b></div>
+      <div class="kv"><span>Интерес</span><b>${d.i}/10</b></div>
+      <div class="kv"><span>Код-тест</span><b>${d.s} из ${d.n}</b></div>
+      <div class="kv"><span>Уверен в действии</span><b>${ap}</b></div>
+    </div>
+    <div class="card">
+      <p class="q" style="margin-bottom:6px">Строка для таблицы (имя · версия · дата · увер. · тревога · интерес · тест · действие)</p>
+      <textarea id="tr" readonly>${tableRow(d)}</textarea>
+      <div style="height:10px"></div>
+      <button class="btn" id="ct">📋 Скопировать строку</button>
+    </div>
+    <button class="btn ghost" id="reset">Открыть как тест для участника</button>
+    <div class="footer">Совет: заведи таблицу со столбцами — Имя, Версия, Дата, Уверенность, Тревога, Интерес, Код-тест, Действие. Вставляй сюда строки от каждого участника.</div>
+  </div>`;
+  root.querySelector('#ct').onclick=async e=>{const t=root.querySelector('#tr').value;try{await navigator.clipboard.writeText(t)}catch(_){root.querySelector('#tr').select();document.execCommand('copy')}e.currentTarget.textContent='✓ Скопировано';setTimeout(()=>e.currentTarget.textContent='📋 Скопировать строку',1500)};
+  root.querySelector('#reset').onclick=()=>{location.hash='';location.reload()};
+}
+
+function show(n){root.querySelectorAll('.step').forEach((s,i)=>s.classList.toggle('active',i===n));window.scrollTo({top:0,behavior:'smooth'})}
+</script>
+</body>
+</html>
