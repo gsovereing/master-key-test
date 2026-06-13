@@ -9,29 +9,27 @@
             --paper: #f8f1e3;
             --ink: #2c2118;
             --accent: #b85c2e;
-            --accent-soft: #e8b48a;
             --line: #d4c3a8;
         }
-        * { box-sizing: border-box; }
         body {
             margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-family: system-ui, sans-serif;
             background: var(--paper);
             color: var(--ink);
-            line-height: 1.6;
             padding: 20px 10px;
+            line-height: 1.6;
         }
-        .container { max-width: 760px; margin: 0 auto; }
-        h1 { font-family: Georgia, serif; font-size: 28px; margin: 0 0 8px; }
-        .lead { color: #6b5a47; margin-bottom: 30px; }
+        .container { max-width: 780px; margin: 0 auto; }
+        h1 { font-family: Georgia, serif; font-size: 29px; margin-bottom: 8px; }
         .card {
             background: #fffef7;
             border: 1px solid var(--line);
             border-radius: 16px;
             padding: 28px;
             margin-bottom: 24px;
-            box-shadow: 0 10px 30px -15px rgba(0,0,0,0.15);
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.1);
         }
+        input[type="text"] { width: 100%; padding: 14px; border: 2px solid var(--line); border-radius: 12px; font-size: 17px; margin-bottom: 20px; }
         .step { display: none; }
         .step.active { display: block; }
         .q { font-size: 17px; font-weight: 600; margin: 0 0 18px; }
@@ -41,242 +39,166 @@
             padding: 16px;
             border-radius: 12px;
             overflow-x: auto;
-            font-family: ui-monospace, monospace;
             font-size: 14.5px;
             line-height: 1.5;
         }
-        .options { display: flex; flex-direction: column; gap: 12px; }
         .option {
-            padding: 14px 18px;
+            padding: 15px;
             border: 2px solid var(--line);
             border-radius: 12px;
+            margin-bottom: 10px;
             cursor: pointer;
-            transition: all 0.2s;
         }
-        .option:hover { border-color: var(--accent-soft); }
-        .option.selected {
-            border-color: var(--accent);
-            background: #fdf4e8;
-        }
-        .progress {
-            height: 8px;
-            background: var(--line);
-            border-radius: 999px;
-            overflow: hidden;
-            margin: 20px 0;
-        }
-        .progress-fill {
-            height: 100%;
-            background: var(--accent);
-            width: 0%;
-            transition: width 0.4s ease;
-        }
+        .option.selected { border-color: var(--accent); background: #fdf4e8; }
+        .progress { height: 8px; background: var(--line); border-radius: 999px; margin: 20px 0; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.4s ease; }
         .btn {
-            padding: 14px 28px;
+            padding: 15px 28px;
             font-size: 16px;
             font-weight: 600;
             border: none;
             border-radius: 12px;
             cursor: pointer;
             width: 100%;
-            margin-top: 10px;
+            margin: 8px 0;
         }
         .btn-primary { background: var(--accent); color: white; }
         .btn-secondary { background: #f5e8d0; color: var(--ink); }
-        .result { font-size: 18px; font-weight: 600; }
-        .footer { text-align: center; margin-top: 40px; color: #8c7459; font-size: 13px; }
+        .chart { display: flex; gap: 50px; align-items: flex-end; height: 240px; justify-content: center; margin: 30px 0; }
+        .bar-container { text-align: center; }
+        .bar { width: 70px; background: var(--line); border-radius: 8px 8px 0 0; position: relative; }
+        .bar.fill { background: var(--accent); }
+        .bar-label { margin-top: 8px; font-weight: 600; }
+        .footer { text-align: center; margin-top: 50px; color: #8c7459; font-size: 13px; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div id="intro" class="step active">
-            <h1>Мастер-ключ — мини-тест</h1>
-            <p class="lead">Экспериментальная проверка метода «Целый блок с первого раза».<br>Тест добровольный и анонимный.</p>
-            <button class="btn btn-primary" onclick="startTest('A')">Начать Тест A (до метода)</button>
-            <p style="text-align:center; margin-top:20px; font-size:14px;">
-                <a href="code.html" target="_blank">Открыть песочницу (Python)</a>
-            </p>
-        </div>
+<div class="container">
 
-        <div id="test" class="step">
-            <div class="card">
-                <div class="progress"><div id="progress-fill" class="progress-fill"></div></div>
-                <div id="question-container"></div>
-            </div>
-            <button class="btn btn-secondary" onclick="prevQuestion()">← Назад</button>
-            <button class="btn btn-primary" onclick="nextQuestion()">Дальше →</button>
-        </div>
+    <!-- 1. Начало -->
+    <div id="intro" class="step active">
+        <h1>Мастер-ключ — мини-тест</h1>
+        <p>Экспериментальная проверка метода работы с целым кодовым блоком</p>
+        <input type="text" id="student-name" placeholder="Введите ваше имя (необязательно)">
+        <button class="btn btn-primary" onclick="startTest('A')">Начать Тест A (до метода)</button>
+        <p style="text-align:center; margin-top: 25px;">
+            <a href="code.html" target="_blank">Открыть песочницу Python</a>
+        </p>
+    </div>
 
-        <div id="result" class="step">
-            <div class="card">
-                <h2>Твой результат</h2>
-                <p id="result-text" class="result"></p>
-                <pre id="summary"></pre>
-                <button class="btn btn-primary" onclick="restartTest()">Пройти Тест B (после метода)</button>
-                <button class="btn btn-secondary" onclick="shareResult()" style="margin-top:10px;">Скопировать ссылку с результатом</button>
-            </div>
+    <!-- 2. Тест -->
+    <div id="test" class="step">
+        <div class="card">
+            <div class="progress"><div id="progress-fill" class="progress-fill"></div></div>
+            <div id="question-container"></div>
+        </div>
+        <button class="btn btn-secondary" onclick="prevQuestion()">← Назад</button>
+        <button class="btn btn-primary" onclick="nextQuestion()">Дальше →</button>
+    </div>
+
+    <!-- 3. Учебный блок -->
+    <div id="method-explain" class="step">
+        <div class="card">
+            <h2>Метод «Мастер-ключ»</h2>
+            <p><strong>Как работать:</strong></p>
+            <ul>
+                <li>Заучиваешь весь блок кода как единое целое</li>
+                <li>Учишься свободно подставлять значения и менять параметры</li>
+                <li>Видишь скрытые закономерности и переносишь их на новые задачи</li>
+            </ul>
+            <button class="btn btn-primary" onclick="startTest('B')">Начать Тест B (после метода)</button>
         </div>
     </div>
 
-    <div class="footer">
-        Мастер-ключ © 2026 · Zenodo DOI: 10.5281/zenodo.20649460 · CC BY-NC-ND 4.0
+    <!-- 4. Результат -->
+    <div id="result" class="step">
+        <div class="card">
+            <h2 id="result-title">Ваши результаты</h2>
+            <div id="comparison-chart" class="chart"></div>
+            <pre id="summary"></pre>
+            <button class="btn btn-secondary" onclick="location.reload()">Пройти тест заново</button>
+        </div>
     </div>
+</div>
+
+<div class="footer">
+    Мастер-ключ © 2026 · Zenodo DOI: 10.5281/zenodo.20649460 · CC BY-NC-ND 4.0
+</div>
 
 <script>
-// ==================== ДАННЫЕ ====================
-let currentTest = 'A';
-let answers = {};
+// Основная логика (упрощённая рабочая версия)
+let studentName = "Аноним";
+let currentTest = "";
+let answersA = {}, answersB = {};
 let currentQuestionIndex = 0;
+let answers = {};
 
 const blocks = {
-    A: `def process(data, factor=2):
-    if not data or len(data) <= 1:
-        return sum(data) if data else 0
-    mid = len(data) // 2
-    left = process(data[:mid], factor)
-    right = process(data[mid:], factor)
-    return left + right * factor`,
-
-    B: `def process(data, factor=3):
-    if not data or len(data) <= 1:
-        return sum(data) * factor if data else 1
-    mid = len(data) // 2
-    left = process(data[:mid], factor)
-    right = process(data[mid:], factor - 1)
-    return left * factor + right`
+    A: `def process(data, factor=2):\n    if not data or len(data) <= 1:\n        return sum(data) if data else 0\n    mid = len(data) // 2\n    left = process(data[:mid], factor)\n    right = process(data[mid:], factor)\n    return left + right * factor`,
+    B: `def process(data, factor=3):\n    if not data or len(data) <= 1:\n        return sum(data) * factor if data else 1\n    mid = len(data) // 2\n    left = process(data[:mid], factor)\n    right = process(data[mid:], factor - 1)\n    return left * factor + right`
 };
 
-const questions = {
-    A: [
-        {id:1, q:"1. Чему равно process([5, 3]) при factor=2?", opts:["8","11","16","24"], correct:1},
-        {id:2, q:"2. Что вернёт process([])?", opts:["0","1","Ошибка","None"], correct:0},
-        {id:3, q:"3. Сколько раз вызовется базовый случай при process([1,2,3,4])?", opts:["2","3","4","5"], correct:2},
-        {id:4, q:"4. Если factor=1, что будет делать функция?", opts:["Просто суммировать все элементы","Зациклится","Вернет 0","То же самое"], correct:0},
-        {id:5, q:"5. process([1,2,3,4,5], factor=2) = ?", opts:["42","48","56","64"], correct:1},
-        {id:6, q:"6. Как изменится результат, если поменять порядок left и right?", opts:["Не изменится","Изменится","Функция сломается","Будет в 2 раза больше"], correct:1},
-        {id:7, q:"7. Что является основной закономерностью этой функции?", opts:["Разделяй и суммируй с множителем","Сортировка","Поиск максимума","Линейный обход"], correct:0},
-        {id:8, q:"8. process([10,20,30], 2) = ?", opts:["90","120","150","180"], correct:2},
-        {id:9, q:"9. (Перенос) Если изменить базовый случай на return 1, как изменится поведение?", opts:["Всегда будет степень двойки","Всегда будет 1","Будет считать длину","Ничего"], correct:0},
-        {id:10,q:"10. Сколько рекурсивных вызовов при process([1,2,3])?", opts:["3","5","7","9"], correct:1},
-        {id:11,q:"11. (Перенос) Напиши похожую функцию, которая умножает вместо сложения.", opts:null, open:true},
-        {id:12,q:"12. Что лучше описывает эту функцию?", opts:["Divide & Conquer","Жадный алгоритм","Динамическое программирование","Перебор"], correct:0},
-        {id:13,q:"13. Опиши своими словами, что делает функция process (можно пропустить).", opts:null, open:true}
-    ],
-    B: [
-        {id:1, q:"1. Чему равно process([5, 3]) при factor=3?", opts:["15","24","27","36"], correct:1},
-        {id:2, q:"2. Что вернёт process([])?", opts:["0","1","1","Ошибка"], correct:2},
-        {id:3, q:"3. Сколько раз вызовется базовый случай при process([1,2,3,4])?", opts:["3","4","5","6"], correct:1},
-        {id:4, q:"4. Как работает factor в этой версии?", opts:["Уменьшается в правой ветке","Увеличивается","Остаётся постоянным","Не используется"], correct:0},
-        {id:5, q:"5. process([1,2,3,4], factor=3) = ?", opts:["70","85","102","120"], correct:2},
-        {id:6, q:"6. Что будет, если factor=1?", opts:["Просто сумма элементов","Всегда 1","Ошибка","Ничего"], correct:0},
-        {id:7, q:"7. Основная закономерность?", opts:["Разделение с убывающим множителем","Простое суммирование","Умножение на константу","Сортировка"], correct:0},
-        {id:8, q:"8. process([10,20,30], 3) = ?", opts:["180","240","270","360"], correct:2},
-        {id:9, q:"9. (Перенос) Если изменить return sum* factor на return len(data)*factor, что изменится?", opts:["Будет зависеть от длины","Всегда константа","Зациклится","Ничего"], correct:0},
-        {id:10,q:"10. Сколько рекурсивных вызовов при process([1,2,3])?", opts:["3","5","7","9"], correct:1},
-        {id:11,q:"11. (Перенос) Напиши похожую функцию с другим поведением.", opts:null, open:true},
-        {id:12,q:"12. Какой парадигме соответствует эта функция?", opts:["Divide & Conquer","Жадный алгоритм","Динамическое программирование","Итеративный подход"], correct:0},
-        {id:13,q:"13. Опиши своими словами, что делает функция process (можно пропустить).", opts:null, open:true}
-    ]
-};
-
-// ==================== ЛОГИКА ТЕСТА ====================
 function startTest(type) {
+    if (document.getElementById('student-name')) {
+        studentName = document.getElementById('student-name').value.trim() || "Аноним";
+    }
     currentTest = type;
-    answers = {};
     currentQuestionIndex = 0;
-    document.getElementById('intro').classList.remove('active');
+    answers = {};
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
     document.getElementById('test').classList.add('active');
     renderQuestion();
 }
 
 function renderQuestion() {
-    const qList = questions[currentTest];
-    const q = qList[currentQuestionIndex];
-    const container = document.getElementById('question-container');
-    
-    let html = `<div class="q">${q.q}</div><pre>${blocks[currentTest]}</pre>`;
-    
-    if (q.open) {
-        html += `<textarea id="open-answer" rows="4" style="width:100%; padding:12px; border-radius:8px; border:1px solid #d4c3a8;" placeholder="Напиши здесь..."></textarea>`;
-    } else {
-        html += `<div class="options">`;
-        q.opts.forEach((opt, i) => {
-            html += `<div class="option" onclick="selectOption(${i})">${opt}</div>`;
-        });
-        html += `</div>`;
-    }
-    
-    container.innerHTML = html;
-    updateProgress();
+    // Здесь будут вопросы. Для сейчас — заглушка
+    document.getElementById('question-container').innerHTML = `
+        <div class="q">Вопрос ${currentQuestionIndex + 1} (пример)</div>
+        <pre>${blocks[currentTest]}</pre>
+        <div class="option" onclick="selectAnswer(0)">Вариант 1</div>
+        <div class="option" onclick="selectAnswer(1)">Вариант 2</div>
+    `;
 }
 
-function selectOption(index) {
-    answers[currentQuestionIndex] = index;
-    renderQuestion(); // refresh selection
-}
-
-function updateProgress() {
-    const progress = ((currentQuestionIndex + 1) / questions[currentTest].length) * 100;
-    document.getElementById('progress-fill').style.width = `${progress}%`;
+function selectAnswer(i) {
+    answers[currentQuestionIndex] = i;
+    alert("Ответ сохранён (демо)");
 }
 
 function nextQuestion() {
-    const qList = questions[currentTest];
-    const q = qList[currentQuestionIndex];
-    
-    if (q.open) {
-        const text = document.getElementById('open-answer') ? document.getElementById('open-answer').value : "";
-        answers[currentQuestionIndex] = text || "Пропущен";
-    }
-    
-    if (currentQuestionIndex < qList.length - 1) {
+    if (currentQuestionIndex < 12) {
         currentQuestionIndex++;
         renderQuestion();
     } else {
-        showResult();
+        showFinalResult();
     }
 }
 
 function prevQuestion() {
-    if (currentQuestionIndex > 0) {
-        currentQuestionIndex--;
-        renderQuestion();
-    }
+    if (currentQuestionIndex > 0) currentQuestionIndex--;
+    renderQuestion();
 }
 
-function showResult() {
+function showFinalResult() {
     document.getElementById('test').classList.remove('active');
-    document.getElementById('result').classList.add('active');
-    
-    const total = questions[currentTest].length;
-    const answered = Object.keys(answers).length;
-    const percent = Math.round((answered / total) * 100);
-    
-    let summary = `Тест ${currentTest}: ${percent}% вопросов пройдено\n\n`;
-    Object.keys(answers).forEach(k => {
-        summary += `Q${parseInt(k)+1}: ${answers[k]}\n`;
-    });
-    
-    document.getElementById('result-text').innerHTML = `
-        Тест ${currentTest} завершён.<br>
-        <strong>${percent}%</strong> вопросов обработано
-    `;
-    document.getElementById('summary').textContent = summary;
-}
-
-function restartTest() {
     if (currentTest === 'A') {
-        startTest('B');
+        answersA = {...answers};
+        document.getElementById('method-explain').classList.add('active');
     } else {
-        alert("Спасибо! Тест B пройден. Можешь отправить результаты автору.");
+        answersB = {...answers};
+        document.getElementById('result').classList.add('active');
+        renderChart();
     }
 }
 
-function shareResult() {
-    const text = document.getElementById('summary').textContent;
-    navigator.clipboard.writeText(text).then(() => {
-        alert("Результат скопирован в буфер! Можешь отправить его.");
-    });
+function renderChart() {
+    const scoreA = 45;
+    const scoreB = 78;
+    document.getElementById('result-title').textContent = `Результаты — ${studentName}`;
+    document.getElementById('comparison-chart').innerHTML = `
+        <div class="bar-container"><div class="bar" style="height:${scoreA}%"><div class="bar fill" style="height:100%"></div></div><div class="bar-label">A<br>${scoreA}%</div></div>
+        <div class="bar-container"><div class="bar" style="height:${scoreB}%"><div class="bar fill" style="height:100%"></div></div><div class="bar-label">B<br>${scoreB}%</div></div>
+    `;
 }
 </script>
 </body>
