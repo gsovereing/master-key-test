@@ -1,1 +1,823 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Master Key — Physics mini-test</title>
+<style>
+    :root {
+        --paper: #eef3f5; --ink: #1f2a2e; --accent: #2b6c8f;
+        --accent-2: #4a7c59; --danger: #b3402e; --line: #c3d2d8;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, sans-serif; background: var(--paper);
+        color: var(--ink); padding: 20px 10px; line-height: 1.6; }
+    .container { max-width: 780px; margin: 0 auto; }
+    h1 { font-family: Georgia, serif; font-size: 29px; margin-bottom: 8px; }
+    h2 { font-family: Georgia, serif; margin-top: 0; }
+    .muted { color: #6b7e85; }
+    .card { background: #ffffff; border: 1px solid var(--line); border-radius: 16px;
+        padding: 28px; margin-bottom: 20px; box-shadow: 0 10px 30px -10px rgba(0,0,0,0.1); }
+    input[type="text"] { width: 100%; padding: 14px; border: 2px solid var(--line);
+        border-radius: 12px; font-size: 17px; margin-bottom: 20px; }
+    .step { display: none; }
+    .step.active { display: block; animation: fade .35s ease; }
+    @keyframes fade { from {opacity:0;transform:translateY(6px);} to {opacity:1;transform:none;} }
+    pre { background: #1f2a2e; color: #e4eef2; padding: 16px; border-radius: 12px;
+        overflow-x: auto; font-size: 14.5px; line-height: 1.6; white-space: pre;
+        direction: ltr; text-align: left; }
+    code { background: #dde7eb; padding: 1px 6px; border-radius: 5px; font-size: 14px;
+        direction: ltr; unicode-bidi: embed; }
+    .tag { display:inline-block; font-size:12px; font-weight:600; padding:3px 10px; border-radius:999px; }
+    .tag.easy { background:#e3efe0; color:#3a6b4a; }
+    .tag.hard { background:#f3ddd8; color:#9c3522; }
+    .lang-bar { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
+    .lang-btn { padding:7px 14px; border:2px solid var(--line); border-radius:999px;
+        background:#ffffff; cursor:pointer; font-size:14px; }
+    .lang-btn.active { border-color:var(--accent); background:#e7f0f4; font-weight:600; }
+    .scale-q { margin-bottom: 22px; }
+    .scale-q .label { font-weight: 600; margin-bottom: 10px; }
+    .scale-row { display: flex; gap: 6px; flex-wrap: wrap; }
+    .scale-opt { flex: 1; min-width: 96px; text-align: center; padding: 10px 6px;
+        border: 2px solid var(--line); border-radius: 10px; cursor: pointer;
+        font-size: 13px; user-select: none; transition: .15s; }
+    .scale-opt .num { display:block; font-size: 17px; font-weight: 700; margin-bottom: 2px; }
+    .scale-opt:hover { border-color: var(--accent); }
+    .scale-opt.selected { border-color: var(--accent); background: #e7f0f4; }
+    .option { padding: 14px 16px; border: 2px solid var(--line); border-radius: 12px;
+        margin-bottom: 10px; cursor: pointer; transition: .15s; font-size: 16px; }
+    .option:hover { border-color: var(--accent); }
+    .option.selected { border-color: var(--accent); background: #e7f0f4; }
+    .progress { height: 8px; background: var(--line); border-radius: 999px; margin: 4px 0 22px; overflow: hidden; }
+    .progress-fill { height: 100%; background: var(--accent); width: 0%; transition: width .4s ease; }
+    .qcount { font-size: 13px; color: #6b7e85; margin-bottom: 4px; }
+    .btn { padding: 15px 28px; font-size: 16px; font-weight: 600; border: none;
+        border-radius: 12px; cursor: pointer; width: 100%; margin: 8px 0; }
+    .btn:disabled { opacity: .45; cursor: not-allowed; }
+    .btn-primary { background: var(--accent); color: white; }
+    .btn-secondary { background: #dce8ec; color: var(--ink); }
+    .btn-row { display: flex; gap: 10px; }
+    .hint { font-size: 13px; color: var(--danger); min-height: 18px; }
+    .knobs li { margin-bottom: 6px; }
+    .trace { background:#e7f0f4; border-left:4px solid var(--accent); padding:12px 16px;
+        border-radius:8px; font-size:14px; direction: ltr; text-align: left; }
+    .chart { display: flex; gap: 60px; align-items: flex-end; height: 230px; justify-content: center; margin: 24px 0 8px; }
+    .bar-wrap { text-align: center; }
+    .bar { width: 80px; border-radius: 8px 8px 0 0; margin: auto; transition: height .6s ease; }
+    .bar-val { font-weight: 700; margin-bottom: 6px; }
+    .bar-label { margin-top: 8px; font-weight: 600; }
+    .verdict { text-align: center; font-family: Georgia, serif; font-size: 26px; margin: 10px 0; }
+    .verdict.up { color: var(--accent-2); }
+    .verdict.down { color: var(--danger); }
+    table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 14px; }
+    th, td { padding: 9px 8px; border-bottom: 1px solid var(--line); text-align: start; }
+    th { color: #6b7e85; font-weight: 600; }
+    td.num, th.num { text-align: end; }
+    .delta-up { color: var(--accent-2); font-weight: 700; }
+    .delta-down { color: var(--danger); font-weight: 700; }
+    .footer { text-align: center; margin-top: 40px; color: #6b7e85; font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+    <div id="intro" class="step active">
+        <div class="lang-bar" id="lang-bar"></div>
+        <h1 id="introTitle"></h1>
+        <p class="muted" id="introSubtitle"></p>
+        <div id="closed-banner" class="card" style="display:none;border-color:var(--accent);background:#e7f0f4">
+            <strong id="closed-text"></strong>
+        </div>
+        <div class="card">
+            <label for="student-name" style="font-weight:600" id="nameLabel"></label>
+            <input type="text" id="student-name">
+            <label style="display:flex;gap:10px;align-items:flex-start;font-size:14px;cursor:pointer;margin-bottom:14px">
+                <input type="checkbox" id="consent" style="margin-top:5px">
+                <span id="consentText"></span>
+            </label>
+            <p class="hint" id="name-hint"></p>
+            <button class="btn btn-primary" id="startBtn" onclick="startFlow()"></button>
+        </div>
+    </div>
+
+    <div id="psych1" class="step">
+        <div class="card">
+            <h2 id="p1Title"></h2>
+            <p class="muted" id="p1Sub"></p>
+            <div id="survey1-items"></div>
+            <p class="hint" id="psych1-hint"></p>
+            <button class="btn btn-primary" id="p1Btn" onclick="submitSurvey(1)"></button>
+        </div>
+    </div>
+
+    <div id="task" class="step">
+        <div class="card">
+            <h2 id="task-title"></h2>
+            <p><span id="task-tag" class="tag"></span></p>
+            <pre id="task-code"></pre>
+            <div class="qcount" id="task-qcount"></div>
+            <div class="progress"><div id="task-progress" class="progress-fill"></div></div>
+            <div class="scale-q label" id="task-question"></div>
+            <div id="task-options"></div>
+            <p class="hint" id="task-hint"></p>
+            <div class="btn-row">
+                <button class="btn btn-secondary" id="task-prev" onclick="taskPrev()"></button>
+                <button class="btn btn-primary" id="task-next" onclick="taskNext()"></button>
+            </div>
+        </div>
+    </div>
+
+    <div id="learn" class="step">
+        <div class="card" id="learn-card"></div>
+    </div>
+
+    <div id="psych2" class="step">
+        <div class="card">
+            <h2 id="p2Title"></h2>
+            <p class="muted" id="p2Sub"></p>
+            <div id="survey2-items"></div>
+            <p class="hint" id="psych2-hint"></p>
+            <button class="btn btn-primary" id="p2Btn" onclick="submitSurvey(2)"></button>
+        </div>
+    </div>
+
+    <div id="result" class="step">
+        <div class="card">
+            <h2 id="result-title"></h2>
+            <p class="muted" id="resultNote"></p>
+            <div id="comparison-chart" class="chart"></div>
+            <div id="verdict" class="verdict"></div>
+            <table id="subscales"></table>
+            <h3 style="font-family:Georgia,serif;margin-top:26px" id="taskResultsHeader"></h3>
+            <table id="task-scores"></table>
+            <p class="muted" style="font-size:13px;margin-top:8px" id="taskNote"></p>
+            <p id="submit-status" style="font-size:13px;margin:6px 0"></p>
+            <button class="btn btn-secondary" id="downloadBtn" onclick="exportCSV()"></button>
+            <div id="export-panel" style="display:none;margin-top:14px">
+                <p class="muted" style="font-size:13px" id="exportHint"></p>
+                <textarea id="csv-text" readonly
+                    style="width:100%;height:120px;border:2px solid var(--line);border-radius:10px;
+                    padding:10px;font-family:monospace;font-size:12px;background:#fff;color:var(--ink);direction:ltr"></textarea>
+                <button class="btn btn-secondary" id="copyBtn" onclick="copyCSV(this)"></button>
+            </div>
+            <button class="btn btn-secondary" id="retakeBtn" onclick="location.reload()"></button>
+        </div>
+    </div>
+</div>
+
+<div class="footer">
+    Master Key © 2026 · Zenodo DOI: 10.5281/zenodo.20649460 · CC BY-NC-ND 4.0
+</div>
+
+<script>
+/* ===== DATA COLLECTION SETTINGS ===== */
+const SUBMIT_URL = "";              // paste this test's own Apps Script /exec URL here
+const TEST_ID = "physics";
+const MIN_SECONDS = 25;
+
+const RELATIONS = `v  = u + a·t
+s  = u·t + ½·a·t²
+v² = u² + 2·a·s`;
+
+const CORRECT = {
+    A: [1, 2, 0, 3, 1, 2, 0, 3, 1, 2],
+    B: [0, 2, 1, 3, 0, 2, 1, 3, 0, 2]
+};
+
+const SURVEY_META = [
+    { pol: 'pos', dim: 'confidence' },
+    { pol: 'neg', dim: 'anxiety' },
+    { pol: 'neg', dim: 'anxiety' },
+    { pol: 'pos', dim: 'confidence' },
+    { pol: 'neg', dim: 'fear' },
+    { pol: 'pos', dim: 'confidence' }
+];
+
+function optionsA(T) {
+    return [
+        T.a1opts,
+        ["m/s", "m", "m/s²", "s"],
+        ["s = ½·a·t²", "s = u·t", "s = a·t", "s = a·t²"],
+        ["6", "18", "3", "9"],
+        ["5", "20", "40", "4"],
+        ["6", "4", "8", "12"],
+        ["16", "24", "12", "20"],
+        ["×2", "×8", "×½", "×4"],
+        ["7", "5", "3", "4"],
+        ["40", "10", "20", "5"]
+    ];
+}
+function optionsB() {
+    return [
+        ["12", "7", "3", "24"],
+        ["6", "16", "11", "10"],
+        ["12", "8", "32", "4"],
+        ["5", "100", "20", "4"],
+        ["6", "36", "18", "3"],
+        ["50", "10", "25", "5"],
+        ["18", "21", "12", "30"],
+        ["20", "5", "100", "10"],
+        ["25", "45", "20", "5"],
+        ["×2", "×4", "×√2", "×½"]
+    ];
+}
+
+const I18N = {
+en: {
+    name: "English", dir: "ltr",
+    title: "Master Key — Physics mini-test",
+    subtitle: "Topic: motion at constant acceleration. Task A (10 medium-easy) → lesson → Task B (10 hard). A short state check precedes each task.",
+    nameLabel: "Name or nickname", namePh: "A nickname is fine",
+    consent: "I agree to the anonymous use of my answers for research on the “Master Key” learning method.",
+    consentReq: "Please confirm consent to continue.",
+    start: "Start",
+    p1Title: "State check №1", p1Sub: "Right now, before the first task.",
+    p2Title: "State check №2", p2Sub: "The same statements — before the second task.",
+    surveyAll: "Please answer all items.",
+    toA: "Go to Task A", toB: "Go to Task B",
+    scale: ["Not at all", "A little", "Moderately", "Strongly", "Very strongly"],
+    survey: ["Right now I feel calm", "I feel inner tension", "I feel anxious about the upcoming task",
+        "I feel confident in my abilities", "I am afraid of making a mistake", "I feel focused and ready to begin"],
+    blockA: `s = u·t + ½·a·t²
+
+u — initial velocity (m/s)
+a — acceleration (m/s²)
+t — time (s)
+s — displacement (m)`,
+    blockB: `v  = u + a·t
+s  = u·t + ½·a·t²
+v² = u² + 2·a·s
+
+u — initial velocity   v — final velocity (m/s)
+a — acceleration (m/s²)   t — time (s)
+s — displacement (m)`,
+    taskA: { title: "Task A — before the method", tag: "medium-easy · 10 questions" },
+    taskB: { title: "Task B — after the method", tag: "high difficulty · 10 questions" },
+    a1opts: ["acceleration", "initial velocity", "displacement", "time"],
+    qA: ["In s = u·t + ½·a·t², what does u represent?", "What is the SI unit of acceleration a?",
+        "If u = 0, the formula becomes:", "Compute s (in metres) for u=0, a=2, t=3.",
+        "Compute s for u=5, a=0, t=4.", "Compute s for u=2, a=2, t=2.",
+        "Compute s for u=10, a=−2, t=2.", "With u=0, if you double the time t, displacement s changes by a factor of:",
+        "Compute s for u=3, a=4, t=1.", "Compute s for u=0, a=10, t=2."],
+    qB: ["Find the final velocity v for u=0, a=3, t=4.  (v = u + a·t)", "Find v for u=5, a=2, t=3.",
+        "A body decelerates: u=20, a=−4, t=3. Find v.", "Find the acceleration a if u=0, v=20, t=5.",
+        "Using v² = u² + 2·a·s with u=0, a=2, s=9, find v.",
+        "Starting from rest with a=2 m/s², how far does the body travel before reaching v=10 m/s?",
+        "Find the displacement s for u=4, a=2, t=3.",
+        "A car at u=10 m/s brakes at a=−5 m/s² until it stops. Find the stopping distance s.",
+        "An object is dropped (u=0, a=10 m/s²). How far does it fall during the 3rd second alone (t=2 s to t=3 s)?",
+        "In v² = u² + 2·a·s with u=0, doubling the displacement s changes v by a factor of:"],
+    qOf: (i, n) => `Question ${i} of ${n}`,
+    back: "← Back", next: "Next →", toLesson: "To the lesson →", showResult: "Show result",
+    chooseAnswer: "Choose an answer to continue.",
+    learn: `<h2>Lesson — "Master Key": motion at constant acceleration</h2>
+        <p>You have already operated the whole block. Now — what drives it.</p>
+        <p><strong>Five quantities, three relations.</strong> Uniformly accelerated motion links five quantities:
+        <code>u</code> initial velocity, <code>v</code> final velocity, <code>a</code> acceleration,
+        <code>t</code> time, <code>s</code> displacement. They are tied together by three relations:</p>
+        <pre class="code-pre"></pre>
+        <ul><li>Task A used the middle one — displacement <code>s = u·t + ½·a·t²</code>.</li>
+        <li>The <code>½·a·t²</code> term is the extra distance the acceleration adds; with <code>a=0</code> only <code>u·t</code> remains.</li></ul>
+        <p><strong>Worked trace of s for u=2, a=2, t=2:</strong></p>
+        <div class="trace">s = 2·2 + ½·2·2² = 4 + 4 = <strong>8 m</strong>.</div>
+        <p style="margin-top:18px"><strong>The three "keys":</strong></p>
+        <ul class="knobs"><li>① which relation to pick — match what you <em>know</em> to what you <em>want</em>;</li>
+        <li>② one relation or two — sometimes you find <code>t</code> first, then <code>s</code>;</li>
+        <li>③ mind the signs — <code>a</code> can be negative (braking, deceleration).</li></ul>
+        <p>In Task B you will use all three relations and often chain them. Read what each question gives you, pick the matching relation, and operate.</p>
+        <button class="btn btn-primary" onclick="goTo('psych2')">Continue</button>`,
+    resultNote: "State index: higher means calmer, more confident, less anxiety and fear.",
+    beforeA: "Before A", beforeB: "Before B",
+    stateUp: "State progress", stateDown: "State decline", stateSame: "State unchanged", pp: "pp",
+    subHead: ["Indicator", "Before A", "Before B", "Δ"],
+    dimAnx: "Anxiety / tension", dimFear: "Fear of mistakes", dimConf: "Confidence / calm",
+    taskResults: "Task results",
+    colBlock: "Block", colDiff: "Difficulty", colCorrect: "Correct", colPct: "%",
+    diffEasy: "medium-easy", diffHard: "high difficulty",
+    taskNote: "Block B is markedly harder than A — comparing their percentages directly is not valid.",
+    download: "Download results (CSV)",
+    exportHint: "If the file did not download (can happen in preview), copy the data with the button below.",
+    copy: "Copy to clipboard", copied: "Copied ✓", retake: "Take again",
+    submitted: "Result sent to the shared table ✓",
+    submitFail: "Could not send. Copy the CSV below.",
+    closed: (c, l) => `Data collection is complete (${c} of ${l}). Thanks for your interest! You can still take the test, but results are no longer collected.`
+},
+sw: {
+    name: "Kiswahili", dir: "ltr",
+    title: "Master Key — Jaribio la Fizikia",
+    subtitle: "Mada: mwendo wenye mchapuko thabiti. Zoezi A (10, wepesi wa kati) → somo → Zoezi B (10 magumu). Kabla ya kila zoezi kuna tathmini fupi ya hali.",
+    nameLabel: "Jina au lakabu", namePh: "Lakabu inakubalika",
+    consent: "Ninakubali matumizi yasiyo na jina ya majibu yangu kwa utafiti wa mbinu ya “Master Key”.",
+    consentReq: "Tafadhali thibitisha idhini ili kuendelea.",
+    start: "Anza",
+    p1Title: "Tathmini ya hali Na.1", p1Sub: "Sasa hivi, kabla ya zoezi la kwanza.",
+    p2Title: "Tathmini ya hali Na.2", p2Sub: "Kauli zilezile — kabla ya zoezi la pili.",
+    surveyAll: "Tafadhali jibu vipengele vyote.",
+    toA: "Nenda kwenye Zoezi A", toB: "Nenda kwenye Zoezi B",
+    scale: ["Hapana kabisa", "Kidogo", "Kiasi", "Sana", "Sana mno"],
+    survey: ["Kwa sasa ninahisi utulivu", "Ninahisi msongo wa ndani", "Ninahisi wasiwasi kuhusu zoezi linalokuja",
+        "Nina imani na uwezo wangu", "Ninaogopa kufanya kosa", "Ninahisi makini na tayari kuanza"],
+    blockA: `s = u·t + ½·a·t²
+
+u — kasi ya awali (m/s)
+a — mchapuko (m/s²)
+t — muda (s)
+s — uhamisho (m)`,
+    blockB: `v  = u + a·t
+s  = u·t + ½·a·t²
+v² = u² + 2·a·s
+
+u — kasi ya awali   v — kasi ya mwisho (m/s)
+a — mchapuko (m/s²)   t — muda (s)
+s — uhamisho (m)`,
+    taskA: { title: "Zoezi A — kabla ya mbinu", tag: "wepesi wa kati · maswali 10" },
+    taskB: { title: "Zoezi B — baada ya mbinu", tag: "ugumu wa juu · maswali 10" },
+    a1opts: ["mchapuko", "kasi ya awali", "uhamisho", "muda"],
+    qA: ["Katika s = u·t + ½·a·t², u inawakilisha nini?", "Kipimo cha SI cha mchapuko a ni kipi?",
+        "Ikiwa u = 0, fomula inakuwa:", "Kokotoa s (kwa mita) kwa u=0, a=2, t=3.",
+        "Kokotoa s kwa u=5, a=0, t=4.", "Kokotoa s kwa u=2, a=2, t=2.",
+        "Kokotoa s kwa u=10, a=−2, t=2.", "Kwa u=0, ukiongeza muda t mara mbili, uhamisho s hubadilika mara:",
+        "Kokotoa s kwa u=3, a=4, t=1.", "Kokotoa s kwa u=0, a=10, t=2."],
+    qB: ["Tafuta kasi ya mwisho v kwa u=0, a=3, t=4.  (v = u + a·t)", "Tafuta v kwa u=5, a=2, t=3.",
+        "Kitu kinapunguza kasi: u=20, a=−4, t=3. Tafuta v.", "Tafuta mchapuko a ikiwa u=0, v=20, t=5.",
+        "Kwa kutumia v² = u² + 2·a·s na u=0, a=2, s=9, tafuta v.",
+        "Kuanzia mapumziko kwa a=2 m/s², kitu husafiri umbali gani kabla ya kufikia v=10 m/s?",
+        "Tafuta uhamisho s kwa u=4, a=2, t=3.",
+        "Gari lenye u=10 m/s linakanyaga breki kwa a=−5 m/s² hadi linasimama. Tafuta umbali wa kusimama s.",
+        "Kitu kinaangushwa (u=0, a=10 m/s²). Husafiri umbali gani katika sekunde ya 3 pekee (t=2 s hadi t=3 s)?",
+        "Katika v² = u² + 2·a·s na u=0, kuongeza uhamisho s mara mbili hubadilisha v mara:"],
+    qOf: (i, n) => `Swali ${i} kati ya ${n}`,
+    back: "← Nyuma", next: "Mbele →", toLesson: "Kwenda somo →", showResult: "Onyesha matokeo",
+    chooseAnswer: "Chagua jibu ili kuendelea.",
+    learn: `<h2>Somo — “Master Key”: mwendo wenye mchapuko thabiti</h2>
+        <p>Tayari umeendesha kizuizi kizima. Sasa — kinachokiendesha.</p>
+        <p><strong>Vipimo vitano, mahusiano matatu.</strong> Mwendo wa mchapuko sawa huunganisha vipimo vitano:
+        <code>u</code> kasi ya awali, <code>v</code> kasi ya mwisho, <code>a</code> mchapuko,
+        <code>t</code> muda, <code>s</code> uhamisho. Vinaunganishwa na mahusiano matatu:</p>
+        <pre class="code-pre"></pre>
+        <ul><li>Zoezi A lilitumia lile la katikati — uhamisho <code>s = u·t + ½·a·t²</code>.</li>
+        <li>Kipengele <code>½·a·t²</code> ni umbali wa ziada unaoongezwa na mchapuko; kwa <code>a=0</code> hubaki <code>u·t</code> pekee.</li></ul>
+        <p><strong>Ufuatiliaji wa s kwa u=2, a=2, t=2:</strong></p>
+        <div class="trace">s = 2·2 + ½·2·2² = 4 + 4 = <strong>8 m</strong>.</div>
+        <p style="margin-top:18px"><strong>“Funguo” tatu:</strong></p>
+        <ul class="knobs"><li>① uhusiano upi uchague — linganisha <em>unachojua</em> na <em>unachotaka</em>;</li>
+        <li>② uhusiano mmoja au miwili — wakati mwingine unapata <code>t</code> kwanza, kisha <code>s</code>;</li>
+        <li>③ zingatia ishara — <code>a</code> inaweza kuwa hasi (kukanyaga breki, kupunguza kasi).</li></ul>
+        <p>Katika Zoezi B utatumia mahusiano yote matatu na mara nyingi kuyaunganisha. Soma kilichotolewa, chagua uhusiano sahihi na uutumie.</p>
+        <button class="btn btn-primary" onclick="goTo('psych2')">Endelea</button>`,
+    resultNote: "Kielelezo cha hali: juu zaidi = utulivu, kujiamini zaidi, wasiwasi na hofu kidogo.",
+    beforeA: "Kabla A", beforeB: "Kabla B",
+    stateUp: "Hali imeimarika", stateDown: "Hali imeshuka", stateSame: "Hali haijabadilika", pp: "a.a",
+    subHead: ["Kiashiria", "Kabla A", "Kabla B", "Δ"],
+    dimAnx: "Wasiwasi / msongo", dimFear: "Hofu ya kukosea", dimConf: "Kujiamini / utulivu",
+    taskResults: "Matokeo ya mazoezi",
+    colBlock: "Kizuizi", colDiff: "Ugumu", colCorrect: "Sahihi", colPct: "%",
+    diffEasy: "wepesi wa kati", diffHard: "ugumu wa juu",
+    taskNote: "Kizuizi B ni kigumu zaidi kuliko A — kulinganisha asilimia zao moja kwa moja si sahihi.",
+    download: "Pakua matokeo (CSV)",
+    exportHint: "Ikiwa faili haikupakuliwa (huweza kutokea katika onyesho-awali), nakili data kwa kitufe hapa chini.",
+    copy: "Nakili", copied: "Imenakiliwa ✓", retake: "Fanya tena",
+    submitted: "Matokeo yametumwa kwenye jedwali la pamoja ✓",
+    submitFail: "Imeshindikana kutuma. Nakili CSV hapa chini.",
+    closed: (c, l) => `Ukusanyaji wa data umekamilika (${c} kati ya ${l}). Asante kwa kupendezwa! Unaweza kufanya jaribio, lakini matokeo hayakusanywi tena.`
+},
+ar: {
+    name: "العربية", dir: "rtl",
+    title: "المفتاح الرئيسي — اختبار الفيزياء",
+    subtitle: "الموضوع: الحركة بتسارع ثابت. المهمة A (١٠ أسئلة، سهلة نسبيًا) ← الدرس ← المهمة B (١٠ صعبة). يسبق كل مهمة تقييم قصير للحالة.",
+    nameLabel: "الاسم أو لقب", namePh: "يمكن استخدام اسم مستعار",
+    consent: "أوافق على الاستخدام المجهول لإجاباتي في بحث حول طريقة «المفتاح الرئيسي».",
+    consentReq: "يرجى الموافقة للمتابعة.",
+    start: "ابدأ",
+    p1Title: "تقييم الحالة ١", p1Sub: "الآن، قبل المهمة الأولى.",
+    p2Title: "تقييم الحالة ٢", p2Sub: "نفس العبارات — قبل المهمة الثانية.",
+    surveyAll: "يرجى الإجابة على جميع البنود.",
+    toA: "الانتقال إلى المهمة A", toB: "الانتقال إلى المهمة B",
+    scale: ["إطلاقًا", "قليلًا", "إلى حدٍّ ما", "بقوة", "بقوة شديدة"],
+    survey: ["أشعر الآن بالهدوء", "أشعر بتوتر داخلي", "أشعر بالقلق من المهمة القادمة",
+        "أثق بقدراتي", "أخشى ارتكاب خطأ", "أشعر بالتركيز والاستعداد للبدء"],
+    blockA: `s = u·t + ½·a·t²
+
+u — السرعة الابتدائية (m/s)
+a — التسارع (m/s²)
+t — الزمن (s)
+s — الإزاحة (m)`,
+    blockB: `v  = u + a·t
+s  = u·t + ½·a·t²
+v² = u² + 2·a·s
+
+u — السرعة الابتدائية   v — السرعة النهائية (m/s)
+a — التسارع (m/s²)   t — الزمن (s)
+s — الإزاحة (m)`,
+    taskA: { title: "المهمة A — قبل الطريقة", tag: "سهولة متوسطة · ١٠ أسئلة" },
+    taskB: { title: "المهمة B — بعد الطريقة", tag: "صعوبة عالية · ١٠ أسئلة" },
+    a1opts: ["التسارع", "السرعة الابتدائية", "الإزاحة", "الزمن"],
+    qA: ["في s = u·t + ½·a·t²، ماذا يمثّل u؟", "ما وحدة قياس التسارع a في النظام الدولي؟",
+        "إذا كان u = 0، تصبح الصيغة:", "احسب s (بالأمتار) عند u=0, a=2, t=3.",
+        "احسب s عند u=5, a=0, t=4.", "احسب s عند u=2, a=2, t=2.",
+        "احسب s عند u=10, a=−2, t=2.", "عند u=0، إذا ضاعفت الزمن t، تتغيّر الإزاحة s بمعامل:",
+        "احسب s عند u=3, a=4, t=1.", "احسب s عند u=0, a=10, t=2."],
+    qB: ["أوجد السرعة النهائية v عند u=0, a=3, t=4.  (v = u + a·t)", "أوجد v عند u=5, a=2, t=3.",
+        "جسم يتباطأ: u=20, a=−4, t=3. أوجد v.", "أوجد التسارع a إذا كان u=0, v=20, t=5.",
+        "باستخدام v² = u² + 2·a·s عند u=0, a=2, s=9، أوجد v.",
+        "انطلاقًا من السكون بتسارع a=2 m/s²، ما المسافة التي يقطعها الجسم قبل بلوغ v=10 m/s؟",
+        "أوجد الإزاحة s عند u=4, a=2, t=3.",
+        "سيارة بسرعة u=10 m/s تكبح بـ a=−5 m/s² حتى تتوقف. أوجد مسافة التوقف s.",
+        "جسم يُسقَط (u=0, a=10 m/s²). ما المسافة التي يقطعها خلال الثانية الثالثة وحدها (من t=2 s إلى t=3 s)؟",
+        "في v² = u² + 2·a·s عند u=0، مضاعفة الإزاحة s تغيّر v بمعامل:"],
+    qOf: (i, n) => `السؤال ${i} من ${n}`,
+    back: "رجوع", next: "التالي", toLesson: "إلى الدرس", showResult: "عرض النتيجة",
+    chooseAnswer: "اختر إجابة للمتابعة.",
+    learn: `<h2>الدرس — «المفتاح الرئيسي»: الحركة بتسارع ثابت</h2>
+        <p>لقد شغّلت الكتلة كاملة بالفعل. الآن — ما الذي يحرّكها.</p>
+        <p><strong>خمس كميات، ثلاث علاقات.</strong> الحركة المتسارعة بانتظام تربط خمس كميات:
+        <code>u</code> السرعة الابتدائية، <code>v</code> السرعة النهائية، <code>a</code> التسارع،
+        <code>t</code> الزمن، <code>s</code> الإزاحة. وتربطها ثلاث علاقات:</p>
+        <pre class="code-pre"></pre>
+        <ul><li>استخدمت المهمة A العلاقة الوسطى — الإزاحة <code>s = u·t + ½·a·t²</code>.</li>
+        <li>الحدّ <code>½·a·t²</code> هو المسافة الإضافية التي يضيفها التسارع؛ عند <code>a=0</code> يبقى <code>u·t</code> فقط.</li></ul>
+        <p><strong>تتبّع s عند u=2, a=2, t=2:</strong></p>
+        <div class="trace">s = 2·2 + ½·2·2² = 4 + 4 = <strong>8 m</strong>.</div>
+        <p style="margin-top:18px"><strong>المفاتيح الثلاثة:</strong></p>
+        <ul class="knobs"><li>① أي علاقة تختار — طابِق ما <em>تعرفه</em> بما <em>تريده</em>؛</li>
+        <li>② علاقة واحدة أم اثنتان — أحيانًا تجد <code>t</code> أولًا ثم <code>s</code>؛</li>
+        <li>③ انتبه للإشارات — قد يكون <code>a</code> سالبًا (كبح، تباطؤ).</li></ul>
+        <p>في المهمة B ستستخدم العلاقات الثلاث وغالبًا تربطها معًا. اقرأ المعطيات، اختر العلاقة المناسبة وطبّقها.</p>
+        <button class="btn btn-primary" onclick="goTo('psych2')">متابعة</button>`,
+    resultNote: "مؤشر الحالة: كلما ارتفع كان أهدأ وأكثر ثقة وأقل قلقًا وخوفًا.",
+    beforeA: "قبل A", beforeB: "قبل B",
+    stateUp: "تحسّن الحالة", stateDown: "تراجع الحالة", stateSame: "الحالة دون تغيير", pp: "ن.م",
+    subHead: ["المؤشر", "قبل A", "قبل B", "Δ"],
+    dimAnx: "القلق / التوتر", dimFear: "الخوف من الخطأ", dimConf: "الثقة / الهدوء",
+    taskResults: "نتائج المهام",
+    colBlock: "الكتلة", colDiff: "الصعوبة", colCorrect: "صحيح", colPct: "٪",
+    diffEasy: "سهولة متوسطة", diffHard: "صعوبة عالية",
+    taskNote: "الكتلة B أصعب بوضوح من A — لذا المقارنة المباشرة بين نسبتيهما غير صحيحة.",
+    download: "تنزيل النتائج (CSV)",
+    exportHint: "إن لم يُنزَّل الملف (قد يحدث في المعاينة)، انسخ البيانات بالزر أدناه.",
+    copy: "نسخ", copied: "تم النسخ ✓", retake: "إعادة الاختبار",
+    submitted: "تم إرسال النتيجة إلى الجدول المشترك ✓",
+    submitFail: "تعذّر الإرسال. انسخ بيانات CSV أدناه.",
+    closed: (c, l) => `اكتمل جمع البيانات (${c} من ${l}). شكرًا لاهتمامك! يمكنك أداء الاختبار، لكن لن تُجمَع النتائج بعد الآن.`
+},
+ru: {
+    name: "Русский", dir: "ltr",
+    title: "Мастер-ключ — мини-тест по физике",
+    subtitle: "Тема: движение с постоянным ускорением. Задание A (10, средняя лёгкость) → учебный блок → Задание B (10 сложных). Перед каждым заданием — короткий опрос состояния.",
+    nameLabel: "Имя или ник", namePh: "Можно псевдоним",
+    consent: "Я согласен(на) на анонимное использование моих ответов для исследования метода «Мастер-ключ».",
+    consentReq: "Отметьте согласие, чтобы продолжить.",
+    start: "Начать",
+    p1Title: "Опрос состояния №1", p1Sub: "Прямо сейчас, перед первым заданием.",
+    p2Title: "Опрос состояния №2", p2Sub: "Те же утверждения — перед вторым заданием.",
+    surveyAll: "Пожалуйста, ответьте на все пункты.",
+    toA: "Перейти к Заданию A", toB: "Перейти к Заданию B",
+    scale: ["Совсем нет", "Немного", "Умеренно", "Сильно", "Очень сильно"],
+    survey: ["Сейчас я чувствую себя спокойно", "Я ощущаю внутреннее напряжение", "Я встревожен(а) из-за предстоящего задания",
+        "Я уверен(а) в своих силах", "Я боюсь допустить ошибку", "Я собран(а) и готов(а) приступить к работе"],
+    blockA: `s = u·t + ½·a·t²
+
+u — начальная скорость (m/s)
+a — ускорение (m/s²)
+t — время (s)
+s — перемещение (m)`,
+    blockB: `v  = u + a·t
+s  = u·t + ½·a·t²
+v² = u² + 2·a·s
+
+u — начальная скорость   v — конечная скорость (m/s)
+a — ускорение (m/s²)   t — время (s)
+s — перемещение (m)`,
+    taskA: { title: "Задание A — до метода", tag: "средняя лёгкость · 10 вопросов" },
+    taskB: { title: "Задание B — после метода", tag: "высокая сложность · 10 вопросов" },
+    a1opts: ["ускорение", "начальная скорость", "перемещение", "время"],
+    qA: ["В формуле s = u·t + ½·a·t² что обозначает u?", "Какая единица измерения ускорения a в СИ?",
+        "Если u = 0, формула превращается в:", "Вычисли s (в метрах) при u=0, a=2, t=3.",
+        "Вычисли s при u=5, a=0, t=4.", "Вычисли s при u=2, a=2, t=2.",
+        "Вычисли s при u=10, a=−2, t=2.", "При u=0, если удвоить время t, перемещение s изменится в:",
+        "Вычисли s при u=3, a=4, t=1.", "Вычисли s при u=0, a=10, t=2."],
+    qB: ["Найди конечную скорость v при u=0, a=3, t=4.  (v = u + a·t)", "Найди v при u=5, a=2, t=3.",
+        "Тело тормозит: u=20, a=−4, t=3. Найди v.", "Найди ускорение a, если u=0, v=20, t=5.",
+        "По формуле v² = u² + 2·a·s при u=0, a=2, s=9 найди v.",
+        "Стартуя из покоя с a=2 m/s², какой путь пройдёт тело до достижения v=10 m/s?",
+        "Найди перемещение s при u=4, a=2, t=3.",
+        "Машина при u=10 m/s тормозит с a=−5 m/s² до остановки. Найди тормозной путь s.",
+        "Тело свободно падает (u=0, a=10 m/s²). Какой путь оно пройдёт за одну только 3-ю секунду (t=2 s … t=3 s)?",
+        "В v² = u² + 2·a·s при u=0 удвоение перемещения s изменяет v в:"],
+    qOf: (i, n) => `Вопрос ${i} из ${n}`,
+    back: "← Назад", next: "Дальше →", toLesson: "К учебному блоку →", showResult: "Показать результат",
+    chooseAnswer: "Выберите ответ, чтобы продолжить.",
+    learn: `<h2>Учебный блок «Мастер-ключ»: движение с постоянным ускорением</h2>
+        <p>Вы уже работали с целым блоком. Теперь — что им управляет.</p>
+        <p><strong>Пять величин, три соотношения.</strong> Равноускоренное движение связывает пять величин:
+        <code>u</code> начальная скорость, <code>v</code> конечная скорость, <code>a</code> ускорение,
+        <code>t</code> время, <code>s</code> перемещение. Их связывают три соотношения:</p>
+        <pre class="code-pre"></pre>
+        <ul><li>В Задании A использовалось среднее — перемещение <code>s = u·t + ½·a·t²</code>.</li>
+        <li>Член <code>½·a·t²</code> — это добавочный путь от ускорения; при <code>a=0</code> остаётся только <code>u·t</code>.</li></ul>
+        <p><strong>Трассировка s при u=2, a=2, t=2:</strong></p>
+        <div class="trace">s = 2·2 + ½·2·2² = 4 + 4 = <strong>8 m</strong>.</div>
+        <p style="margin-top:18px"><strong>Три «ключа»:</strong></p>
+        <ul class="knobs"><li>① какое соотношение выбрать — сопоставь, что <em>известно</em>, с тем, что <em>нужно</em>;</li>
+        <li>② одно соотношение или два — иногда сначала находишь <code>t</code>, потом <code>s</code>;</li>
+        <li>③ следи за знаками — <code>a</code> может быть отрицательным (торможение).</li></ul>
+        <p>В Задании B используются все три соотношения, часто в связке. Прочитай, что дано, выбери подходящее соотношение и примени его.</p>
+        <button class="btn btn-primary" onclick="goTo('psych2')">Продолжить</button>`,
+    resultNote: "Индекс состояния: выше — спокойнее, увереннее, меньше тревоги и страха.",
+    beforeA: "До A", beforeB: "До B",
+    stateUp: "Прогресс состояния", stateDown: "Регресс состояния", stateSame: "Состояние без изменений", pp: "п.п.",
+    subHead: ["Показатель", "До A", "До B", "Δ"],
+    dimAnx: "Тревога / напряжение", dimFear: "Страх ошибки", dimConf: "Уверенность / спокойствие",
+    taskResults: "Результаты заданий",
+    colBlock: "Блок", colDiff: "Сложность", colCorrect: "Верно", colPct: "%",
+    diffEasy: "средняя лёгкость", diffHard: "высокая сложность",
+    taskNote: "Блок B заметно сложнее A — прямое сравнение процентов между ними некорректно.",
+    download: "Скачать результаты (CSV)",
+    exportHint: "Если файл не скачался (бывает в предпросмотре), скопируйте данные кнопкой ниже.",
+    copy: "Скопировать в буфер", copied: "Скопировано ✓", retake: "Пройти заново",
+    submitted: "Результат отправлен в общую таблицу ✓",
+    submitFail: "Не удалось отправить. Скопируйте CSV ниже.",
+    closed: (c, l) => `Набор данных завершён (${c} из ${l}). Спасибо за интерес! Тест можно пройти, но результаты больше не собираются.`
+}
+};
+
+let lang = 'en';
+const state = { name: "", startedAt: "", t0: 0, survey1: {}, survey2: {}, answersA: [], answersB: [] };
+
+function setLang(l) {
+    lang = l;
+    const T = I18N[l];
+    document.documentElement.dir = T.dir;
+    document.documentElement.lang = l;
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.l === l));
+    const set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+    set('introTitle', T.title); set('introSubtitle', T.subtitle);
+    set('nameLabel', T.nameLabel); document.getElementById('student-name').placeholder = T.namePh;
+    set('consentText', T.consent); set('startBtn', T.start);
+    set('p1Title', T.p1Title); set('p1Sub', T.p1Sub); set('p1Btn', T.toA);
+    set('p2Title', T.p2Title); set('p2Sub', T.p2Sub); set('p2Btn', T.toB);
+    set('task-prev', T.back);
+    set('resultNote', T.resultNote); set('taskResultsHeader', T.taskResults);
+    set('taskNote', T.taskNote); set('downloadBtn', T.download);
+    set('exportHint', T.exportHint); set('copyBtn', T.copy); set('retakeBtn', T.retake);
+    const lc = document.getElementById('learn-card');
+    lc.innerHTML = T.learn;
+    const cp = lc.querySelector('.code-pre');
+    if (cp) cp.textContent = RELATIONS;
+}
+
+function renderLangBar() {
+    document.getElementById('lang-bar').innerHTML = Object.keys(I18N).map(l =>
+        `<button class="lang-btn" data-l="${l}" onclick="setLang('${l}')">${I18N[l].name}</button>`).join('');
+}
+
+function goTo(id) {
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function startFlow() {
+    const T = I18N[lang];
+    if (!document.getElementById('consent').checked) {
+        document.getElementById('name-hint').textContent = T.consentReq;
+        return;
+    }
+    state.name = document.getElementById('student-name').value.trim() || 'Anon';
+    state.startedAt = new Date().toISOString();
+    state.t0 = Date.now();
+    state.answersA = Array(10).fill(null);
+    state.answersB = Array(10).fill(null);
+    renderSurvey(1); renderSurvey(2);
+    goTo('psych1');
+}
+
+function renderSurvey(which) {
+    const T = I18N[lang];
+    const box = document.getElementById('survey' + which + '-items');
+    box.innerHTML = T.survey.map((text, qi) => `
+        <div class="scale-q">
+            <div class="label">${qi + 1}. ${text}</div>
+            <div class="scale-row">
+                ${T.scale.map((lbl, i) => `
+                    <div class="scale-opt" onclick="pickScale(${which}, ${qi}, ${i + 1}, this)">
+                        <span class="num">${i + 1}</span>${lbl}
+                    </div>`).join('')}
+            </div>
+        </div>`).join('');
+}
+function pickScale(which, qi, value, el) {
+    (which === 1 ? state.survey1 : state.survey2)['q' + (qi + 1)] = value;
+    el.parentElement.querySelectorAll('.scale-opt').forEach(o => o.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('psych' + which + '-hint').textContent = '';
+}
+function submitSurvey(which) {
+    const store = which === 1 ? state.survey1 : state.survey2;
+    if (Object.keys(store).length < 6) {
+        document.getElementById('psych' + which + '-hint').textContent = I18N[lang].surveyAll;
+        return;
+    }
+    if (which === 1) startTask('A'); else startTask('B');
+}
+
+let currentTask = 'A';
+let qIndex = 0;
+
+function startTask(t) {
+    currentTask = t; qIndex = 0;
+    const T = I18N[lang];
+    const meta = t === 'A' ? T.taskA : T.taskB;
+    document.getElementById('task-title').textContent = meta.title;
+    const tag = document.getElementById('task-tag');
+    tag.className = 'tag ' + (t === 'A' ? 'easy' : 'hard');
+    tag.textContent = meta.tag;
+    document.getElementById('task-code').textContent = (t === 'A' ? T.blockA : T.blockB);
+    goTo('task');
+    renderTaskQuestion();
+}
+
+function renderTaskQuestion() {
+    const T = I18N[lang];
+    const qText = (currentTask === 'A' ? T.qA : T.qB)[qIndex];
+    const opts = (currentTask === 'A' ? optionsA(T) : optionsB())[qIndex];
+    const answers = currentTask === 'A' ? state.answersA : state.answersB;
+    const total = 10;
+
+    document.getElementById('task-qcount').textContent = T.qOf(qIndex + 1, total);
+    document.getElementById('task-progress').style.width = ((qIndex + 1) / total * 100) + '%';
+    document.getElementById('task-question').textContent = qText;
+    document.getElementById('task-options').innerHTML = opts.map((opt, oi) => `
+        <div class="option ${answers[qIndex] === oi ? 'selected' : ''}" onclick="pickTask(${oi}, this)">${opt}</div>`).join('');
+    document.getElementById('task-hint').textContent = '';
+    document.getElementById('task-prev').disabled = (qIndex === 0);
+    document.getElementById('task-next').textContent = (qIndex === total - 1)
+        ? (currentTask === 'A' ? T.toLesson : T.showResult) : T.next;
+}
+
+function pickTask(oi, el) {
+    const answers = currentTask === 'A' ? state.answersA : state.answersB;
+    answers[qIndex] = oi;
+    el.parentElement.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('task-hint').textContent = '';
+}
+
+function taskPrev() { if (qIndex > 0) { qIndex--; renderTaskQuestion(); } }
+
+function taskNext() {
+    const answers = currentTask === 'A' ? state.answersA : state.answersB;
+    if (answers[qIndex] === null) {
+        document.getElementById('task-hint').textContent = I18N[lang].chooseAnswer;
+        return;
+    }
+    if (qIndex < 9) { qIndex++; renderTaskQuestion(); }
+    else if (currentTask === 'A') goTo('learn');
+    else { computeResults(); goTo('result'); }
+}
+
+function stateIndex(ans) {
+    let sum = 0;
+    SURVEY_META.forEach((m, i) => { const v = ans['q' + (i + 1)]; sum += (m.pol === 'pos') ? v : (6 - v); });
+    return Math.round((sum - 6) / 24 * 1000) / 10;
+}
+function subscalePct(ans, dim) {
+    const idx = SURVEY_META.map((m, i) => m.dim === dim ? i : -1).filter(i => i >= 0);
+    const avg = idx.reduce((s, i) => s + ans['q' + (i + 1)], 0) / idx.length;
+    return Math.round((avg - 1) / 4 * 1000) / 10;
+}
+function scoreTask(t) {
+    const answers = t === 'A' ? state.answersA : state.answersB;
+    return CORRECT[t].reduce((s, c, i) => s + (answers[i] === c ? 1 : 0), 0);
+}
+function straightLine(ans) {
+    const vals = Object.values(ans);
+    return vals.length === 6 && vals.every(v => v === vals[0]);
+}
+
+function computeResults() {
+    const T = I18N[lang];
+    const a = stateIndex(state.survey1), b = stateIndex(state.survey2);
+    const deltaPP = Math.round((b - a) * 10) / 10;
+    const rel = a > 0 ? Math.round((b - a) / a * 1000) / 10 : null;
+    const duration = Math.round((Date.now() - state.t0) / 1000);
+    const suspect = (duration < MIN_SECONDS || straightLine(state.survey1) || straightLine(state.survey2)) ? 1 : 0;
+
+    document.getElementById('result-title').textContent = state.name;
+
+    const barH = pct => Math.max(6, Math.round(pct / 100 * 200));
+    document.getElementById('comparison-chart').innerHTML = `
+        <div class="bar-wrap"><div class="bar-val">${a}%</div>
+            <div class="bar" style="height:${barH(a)}px;background:var(--line)"></div>
+            <div class="bar-label">${T.beforeA}</div></div>
+        <div class="bar-wrap"><div class="bar-val">${b}%</div>
+            <div class="bar" style="height:${barH(b)}px;background:var(--accent)"></div>
+            <div class="bar-label">${T.beforeB}</div></div>`;
+
+    const vEl = document.getElementById('verdict');
+    if (deltaPP > 0) { vEl.className = 'verdict up'; vEl.textContent = `${T.stateUp}: +${deltaPP} ${T.pp}` + (rel !== null ? ` (+${rel}%)` : ''); }
+    else if (deltaPP < 0) { vEl.className = 'verdict down'; vEl.textContent = `${T.stateDown}: ${deltaPP} ${T.pp}` + (rel !== null ? ` (${rel}%)` : ''); }
+    else { vEl.className = 'verdict'; vEl.textContent = T.stateSame; }
+
+    const dims = [
+        { key: 'anxiety', label: T.dimAnx, good: 'down' },
+        { key: 'fear', label: T.dimFear, good: 'down' },
+        { key: 'confidence', label: T.dimConf, good: 'up' }
+    ];
+    let rows = `<tr><th>${T.subHead[0]}</th><th class="num">${T.subHead[1]}</th><th class="num">${T.subHead[2]}</th><th class="num">${T.subHead[3]}</th></tr>`;
+    dims.forEach(d => {
+        const pa = subscalePct(state.survey1, d.key), pb = subscalePct(state.survey2, d.key);
+        const dd = Math.round((pb - pa) * 10) / 10;
+        const improved = d.good === 'down' ? dd < 0 : dd > 0;
+        const cls = dd === 0 ? '' : (improved ? 'delta-up' : 'delta-down');
+        rows += `<tr><td>${d.label}</td><td class="num">${pa}%</td><td class="num">${pb}%</td>
+                 <td class="num ${cls}">${dd > 0 ? '+' : ''}${dd} ${T.pp}</td></tr>`;
+    });
+    document.getElementById('subscales').innerHTML = rows;
+
+    const sa = scoreTask('A'), sb = scoreTask('B');
+    document.getElementById('task-scores').innerHTML = `
+        <tr><th>${T.colBlock}</th><th>${T.colDiff}</th><th class="num">${T.colCorrect}</th><th class="num">${T.colPct}</th></tr>
+        <tr><td>A</td><td>${T.diffEasy}</td><td class="num">${sa} / 10</td><td class="num">${sa * 10}%</td></tr>
+        <tr><td>B</td><td>${T.diffHard}</td><td class="num">${sb} / 10</td><td class="num">${sb * 10}%</td></tr>`;
+
+    state._computed = { a, b, deltaPP, rel, sa, sb, duration, suspect };
+    submitResult();
+}
+
+function buildRow() {
+    const c = state._computed;
+    const head = ['test', 'name', 'lang', 'started_at', 'duration_sec', 'suspect'];
+    const row = [TEST_ID, state.name, lang, state.startedAt, c.duration, c.suspect];
+    for (let i = 1; i <= 6; i++) { head.push('s1_q' + i); row.push(state.survey1['q' + i]); }
+    for (let i = 1; i <= 6; i++) { head.push('s2_q' + i); row.push(state.survey2['q' + i]); }
+    head.push('index_A', 'index_B', 'delta_pp', 'delta_pct');
+    row.push(c.a, c.b, c.deltaPP, c.rel);
+    for (let i = 0; i < 10; i++) { head.push('A_q' + (i + 1)); row.push(state.answersA[i]); }
+    for (let i = 0; i < 10; i++) { head.push('B_q' + (i + 1)); row.push(state.answersB[i]); }
+    head.push('scoreA', 'scoreB'); row.push(c.sa, c.sb);
+    return { header: head, row: row };
+}
+function buildCSV() {
+    const { header, row } = buildRow();
+    const esc = v => `"${String(v).replace(/"/g, '""')}"`;
+    return header.join(',') + '\n' + row.map(esc).join(',');
+}
+function exportCSV() {
+    const csv = buildCSV();
+    document.getElementById('csv-text').value = csv;
+    document.getElementById('export-panel').style.display = 'block';
+    try {
+        const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'master-key-physics_' + state.name.replace(/\s+/g, '_') + '.csv';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (e) {}
+}
+function copyCSV(btn) {
+    const ta = document.getElementById('csv-text');
+    ta.focus(); ta.select();
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) {}
+    if (!ok && navigator.clipboard) navigator.clipboard.writeText(ta.value).catch(() => {});
+    const old = btn.textContent;
+    btn.textContent = I18N[lang].copied;
+    setTimeout(() => { btn.textContent = old; }, 1500);
+}
+function submitResult() {
+    const note = document.getElementById('submit-status');
+    if (!SUBMIT_URL) { note.textContent = ''; return; }
+    try {
+        fetch(SUBMIT_URL, { method: 'POST', mode: 'no-cors',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(buildRow()) });
+        note.style.color = 'var(--accent-2)'; note.textContent = I18N[lang].submitted;
+    } catch (e) {
+        note.style.color = 'var(--danger)'; note.textContent = I18N[lang].submitFail;
+    }
+}
+function checkOpen() {
+    if (!SUBMIT_URL) return;
+    const cb = 'mk_cb_' + Date.now();
+    window[cb] = function (res) {
+        delete window[cb];
+        if (res && res.open === false) {
+            document.getElementById('closed-text').textContent = I18N[lang].closed(res.count, res.limit);
+            document.getElementById('closed-banner').style.display = 'block';
+        }
+    };
+    const s = document.createElement('script');
+    s.src = SUBMIT_URL + (SUBMIT_URL.indexOf('?') > -1 ? '&' : '?') + 'callback=' + cb + '&_=' + Date.now();
+    s.onerror = function () { delete window[cb]; };
+    document.body.appendChild(s);
+}
+
+renderLangBar();
+setLang('en');
+window.addEventListener('DOMContentLoaded', checkOpen);
+</script>
+</body>
+</html>
